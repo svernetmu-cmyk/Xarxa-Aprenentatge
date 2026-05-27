@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="ca" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xarxa Aprenentatge - Escola Mare de Déu de la Muntanya</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        tea: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Estils especials per a elements editables actius */
+        .editable-active {
+            outline: 2px dashed #0ea5e9 !important;
+            outline-offset: 4px;
+            background-color: rgba(14, 165, 233, 0.05);
+            border-radius: 4px;
+            cursor: text;
+        }
+        .editable-active:hover {
+            background-color: rgba(14, 165, 233, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased relative">
+
+    <!-- BARRA D'EDICIÓ SUPERIOR (FLOTANT / NOMÉS APAREIX EN ACTIVAR EL MODE EDICIÓ) -->
+    <div id="edit-bar" class="hidden bg-slate-900 text-white py-3 px-4 sticky top-0 z-[100] shadow-xl border-b border-brand-500/30">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span class="flex h-2.5 w-2.5 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
+                </span>
+                <p class="text-xs font-semibold tracking-wide">
+                    <span class="text-brand-400">MODE EDICIÓ ACTIU:</span> Fes clic sobre qualsevol text de la web per modificar-lo directament.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="saveEdits()" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold hover:bg-brand-700 transition-all flex items-center gap-1.5">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Desa els Canvis
+                </button>
+                <button onclick="exportEditedHTML()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-1.5">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Descarrega Web Modificada
+                </button>
+                <button onclick="toggleEditMode()" class="px-2.5 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold hover:bg-slate-700 transition-all">
+                    Surt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÓ FLOTANT PER ACTIVAR MODE EDICIÓ -->
+    <div class="fixed bottom-6 left-6 z-40">
+        <button onclick="toggleEditMode()" id="toggle-edit-btn" class="flex items-center gap-2 bg-slate-900 text-white hover:bg-brand-600 px-4 py-3 rounded-full shadow-2xl hover:shadow-brand-500/20 transition-all transform hover:-translate-y-1 active:translate-y-0 border border-slate-800 font-bold text-xs">
+            <i data-lucide="edit-3" class="w-4 h-4 text-brand-400" id="edit-btn-icon"></i>
+            <span id="edit-btn-text">Activar Edició en Viu</span>
+        </button>
+    </div>
+
+    <!-- HEADER / NAVEGACIÓ -->
+    <header id="main-header" class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logotip i Entitat -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('inici')">
+                    <div class="bg-gradient-to-tr from-brand-600 to-brand-800 text-white p-2.5 rounded-xl shadow-md shadow-brand-500/20">
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-800 to-brand-600 bg-clip-text text-transparent editable-text" id="site-logo-text">Xarxa Aprenentatge</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-medium bg-brand-100 text-brand-800 text-[10px]">CO-CREACIÓ</span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium editable-text" id="site-subtitle">Assessorament Psicopedagògic • Curs 2025-2026</p>
+                    </div>
+                </div>
+
+                <!-- Navegació Desktop -->
+                <nav class="hidden lg:flex space-x-1">
+                    <button onclick="navigateTo('inici')" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-700 hover:bg-slate-50 transition-colors" data-tab="inici">Inici</button>
+                    <button onclick="navigateTo('quisom')" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-700 hover:bg-slate-50 transition-colors" data-tab="quisom">Qui som</button>
+                    <button onclick="navigateTo('projecte')" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-700 hover:bg-slate-50 transition-colors" data-tab="projecte">El Projecte</button>
+                    <button onclick="navigateTo('aula')" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-700 hover:bg-slate-50 transition-colors" data-tab="aula">Aula DUA-TEA</button>
+                    <button onclick="navigateTo('rubrica')" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-700 hover:bg-slate-50 transition-colors" data-tab="rubrica">Rúbrica DUA</button>
+                    <button onclick="navigateTo('rol')" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-700 hover:bg-slate-50 transition-colors" data-tab="rol">Rol Psicopedagògic</button>
+                    <button onclick="navigateTo('contacte')" class="nav-btn px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-bold shadow-md shadow-brand-500/10 hover:bg-brand-700 hover:shadow-brand-500/20 transition-all" data-tab="contacte">Contacte</button>
+                </nav>
+
+                <!-- Botó Menú Mòbil -->
+                <div class="lg:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors focus:outline-none">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú de Navegació Mòbil -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-white border-b border-slate-200 transition-all duration-300">
+            <div class="px-4 pt-2 pb-6 space-y-1.5 shadow-inner">
+                <button onclick="navigateTo('inici')" class="w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 block" data-tab="inici">Inici</button>
+                <button onclick="navigateTo('quisom')" class="w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 block" data-tab="quisom">Qui som</button>
+                <button onclick="navigateTo('projecte')" class="w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 block" data-tab="projecte">El Projecte</button>
+                <button onclick="navigateTo('aula')" class="w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 block" data-tab="aula">Aula DUA-TEA</button>
+                <button onclick="navigateTo('rubrica')" class="w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 block" data-tab="rubrica">Rúbrica DUA</button>
+                <button onclick="navigateTo('rol')" class="w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 block" data-tab="rol">Rol Psicopedagògic</button>
+                <button onclick="navigateTo('contacte')" class="w-full text-center mt-3 px-4 py-3 bg-brand-600 text-white font-bold rounded-xl shadow-md hover:bg-brand-700 block" data-tab="contacte">Contacte</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTAINER DE SECCIONS -->
+    <main class="flex-grow">
+        
+        <!-- SECCIÓ 1: INICI -->
+        <section id="sec-inici" class="tab-content transition-opacity duration-300 py-12 md:py-20 lg:py-24">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Alerta Contextual -->
+                <div class="inline-flex items-center space-x-2 bg-teal-50 border border-teal-200 rounded-full px-4 py-1.5 mb-8 shadow-sm">
+                    <span class="flex h-2 w-2 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tea-500 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-tea-600"></span>
+                    </span>
+                    <p class="text-xs font-semibold text-teal-800 tracking-wide uppercase editable-text" id="hero-tag">Projecte d'Intervenció Inclusiva DUA • Curs 2025-2026</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <!-- Text Principal -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight">
+                            Construint aules per a <span class="bg-gradient-to-r from-brand-600 to-teal-500 bg-clip-text text-transparent">tothom</span>.
+                        </h1>
+                        <p class="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl editable-text" id="hero-description">
+                            Eines pràctiques d'assessorament psicopedagògic i capacitació docent per a la inclusió de l'alumnat amb Trastorn de l'Espectre Autista (TEA) a l'<strong>Escola Mare de Déu de la Muntanya</strong>.
+                        </p>
+                        
+                        <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-sm space-y-2">
+                            <span class="text-2xs font-extrabold text-brand-600 uppercase tracking-widest block editable-text" id="quote-header">La nostra missió com a agents del canvi</span>
+                            <blockquote class="text-slate-700 italic border-l-4 border-brand-500 pl-4 text-sm font-medium editable-text" id="quote-body">
+                                "Sistematitzar la transició cap a un model d'aula inclusiva basat en el Disseny Universal per a l'Aprenentatge (DUA), eliminant barreres de forma col·laborativa i respectant la singularitat de cada alumne."
+                            </blockquote>
+                        </div>
+
+                        <div class="flex flex-wrap gap-4 pt-2">
+                            <button onclick="navigateTo('aula')" class="px-6 py-3.5 bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 hover:bg-brand-700 hover:shadow-brand-500/30 transform hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                Explorar l'Aula DUA-TEA 
+                                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                            </button>
+                            <button onclick="navigateTo('projecte')" class="px-6 py-3.5 bg-white text-slate-700 font-bold border border-slate-300 rounded-xl hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all">
+                                Veure el Projecte
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Gràfic de Dades / Il·lustració context -->
+                    <div class="lg:col-span-5">
+                        <div class="relative bg-gradient-to-tr from-brand-900 to-slate-900 rounded-3xl p-8 shadow-2xl text-white overflow-hidden group">
+                            <!-- Fons decoratiu -->
+                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(14,165,233,0.15),transparent)] pointer-events-none"></div>
+                            
+                            <div class="relative z-10 space-y-6">
+                                <div class="flex justify-between items-start">
+                                    <span class="bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs px-3 py-1 rounded-full font-semibold editable-text" id="card-tag">El repte en xifres</span>
+                                    <i data-lucide="info" class="w-5 h-5 text-brand-300"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold editable-text" id="card-school-name">Escola Mare de Déu de la Muntanya</h3>
+                                <p class="text-slate-300 text-sm editable-text" id="card-description">Necessitat de coordinació davant de l'increment significatiu de la matrícula de l'alumnat diagnosticat amb TEA.</p>
+                                
+                                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                                    <div class="bg-white/5 border border-white/10 p-4 rounded-xl text-center transform group-hover:scale-105 transition-transform">
+                                        <span class="text-3xl font-extrabold text-brand-400 editable-text" id="card-stat-1">9 ➔ 11</span>
+                                        <p class="text-xs text-slate-300 mt-1 font-medium editable-text" id="card-stat-1-label">Alumnes amb TEA curs actual</p>
+                                    </div>
+                                    <div class="bg-white/5 border border-white/10 p-4 rounded-xl text-center transform group-hover:scale-105 transition-transform">
+                                        <span class="text-3xl font-extrabold text-teal-400 editable-text" id="card-stat-2">100%</span>
+                                        <p class="text-xs text-slate-300 mt-1 font-medium editable-text" id="card-stat-2-label">Claustre implicat</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 text-xs text-slate-300 space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-brand-400"></span>
+                                        <span class="editable-text" id="card-bullet-1">Foment de l'autoestima i autoregulació emocional.</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                                        <span class="editable-text" id="card-bullet-2">Cocreació de protocols de transició ambiental.</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                                        <span class="editable-text" id="card-bullet-3">Eines i orientacions aplicades directes a l'aula.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resum Executiu dels 3 Pilars -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-brand-300 shadow-sm hover:shadow-md transition-all space-y-4">
+                        <div class="p-3 bg-brand-50 text-brand-600 rounded-xl w-fit">
+                            <i data-lucide="book-open" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 editable-text" id="pilar-1-title">Capacitació Docent</h4>
+                        <p class="text-sm text-slate-600 editable-text" id="pilar-1-desc">Formacions basades en pautes reals per comprendre el processament sensorial i cognitiu de l'alumnat amb autisme.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-brand-300 shadow-sm hover:shadow-md transition-all space-y-4">
+                        <div class="p-3 bg-teal-50 text-teal-600 rounded-xl w-fit">
+                            <i data-lucide="layout" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 editable-text" id="pilar-2-title">Adaptació del Context</h4>
+                        <p class="text-sm text-slate-600 editable-text" id="pilar-2-desc">Sistematització d'ambients Predictibles, Estructurats i Visualment Organitzats que redueixen de forma dràstica l'estrès.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-brand-300 shadow-sm hover:shadow-md transition-all space-y-4">
+                        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl w-fit">
+                            <i data-lucide="users" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 editable-text" id="pilar-3-title">Acció Coordinada</h4>
+                        <p class="text-sm text-slate-600 editable-text" id="pilar-3-desc">Assessorament col·laboratiu entre l'equip d'intervenció, la directiva, els docents d'aula i els especialistes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 2: QUI SOM (L'EQUIP) -->
+        <section id="sec-quisom" class="tab-content transition-opacity duration-300 py-12 md:py-20 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-50 px-3 py-1 rounded-full editable-text" id="team-sec-tag">Equip Psicopedagògic</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 editable-text" id="team-sec-title">Xarxa Aprenentatge</h2>
+                    <p class="text-slate-600 editable-text" id="team-sec-desc">Som professionals especialistes del Màster Universitari de Psicopedagogia de la UOC, compromeses amb la millora del sistema educatiu inclusiu i l'acompanyament real als claustres docents.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Membre 1: Laura Carrera -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between">
+                        <div class="p-6 space-y-4">
+                            <div class="w-16 h-16 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-bold text-xl shadow-inner">LC</div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900 editable-text" id="member-1-name">Laura Carrera</h3>
+                                <p class="text-xs font-semibold text-brand-600 editable-text" id="member-1-role">Coordinadora d'Intervenció</p>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed editable-text" id="member-1-desc">Especialitzada en el disseny d'entorns d'aula DUA i en la personalització d'agendes visuals predictibles per a alumnat amb TEA.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+                            <span class="text-2xs text-slate-400 font-semibold uppercase">UOC PSICOPEDAGOGIA</span>
+                        </div>
+                    </div>
+
+                    <!-- Membre 2: Ainara Porrino -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between">
+                        <div class="p-6 space-y-4">
+                            <div class="w-16 h-16 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center font-bold text-xl shadow-inner">AP</div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900 editable-text" id="member-2-name">Ainara Porrino</h3>
+                                <p class="text-xs font-semibold text-teal-600 editable-text" id="member-2-role">Especialista en Sensibilització i Famílies</p>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed editable-text" id="member-2-desc">Focalitzada en el treball col·laboratiu, facilitant l'acollida de l'alumnat en entorns no estructurats com el pati o el menjador.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+                            <span class="text-2xs text-slate-400 font-semibold uppercase">UOC PSICOPEDAGOGIA</span>
+                        </div>
+                    </div>
+
+                    <!-- Membre 3: Aura Sauch -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between">
+                        <div class="p-6 space-y-4">
+                            <div class="w-16 h-16 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-xl shadow-inner">AS</div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900 editable-text" id="member-3-name">Aura Sauch</h3>
+                                <p class="text-xs font-semibold text-indigo-600 editable-text" id="member-3-role">Analista de Pràctica Educativa</p>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed editable-text" id="member-3-desc">Focalitzada en els processos de reflexió compartida, recollida de dades i avaluació contínua de les pràctiques inclusives.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+                            <span class="text-2xs text-slate-400 font-semibold uppercase">UOC PSICOPEDAGOGIA</span>
+                        </div>
+                    </div>
+
+                    <!-- Membre 4: Sonia Vernet -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between">
+                        <div class="p-6 space-y-4">
+                            <div class="w-16 h-16 bg-violet-100 text-violet-700 rounded-full flex items-center justify-center font-bold text-xl shadow-inner">SV</div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900 editable-text" id="member-4-name">Sonia Vernet</h3>
+                                <p class="text-xs font-semibold text-violet-600 editable-text" id="member-4-role">Especialista en Protocols de Centre</p>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed editable-text" id="member-4-desc">Coordinadora del desenvolupament del Protocol Institucional de Transició de Centre per dotar de coherència els equips docents.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+                            <span class="text-2xs text-slate-400 font-semibold uppercase">UOC PSICOPEDAGOGIA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manifest de l'Assessorament Col·laboratiu -->
+                <div class="mt-16 bg-gradient-to-r from-brand-50 to-teal-50 rounded-2xl p-8 border border-brand-100 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div class="md:col-span-8 space-y-3">
+                        <h4 class="text-xl font-bold text-slate-900 editable-text" id="manifest-title">Per què "Xarxa Aprenentatge"?</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed editable-text" id="manifest-desc">
+                            Entenem l'assessorament psicopedagògic des d'un **model constructivista i col·laboratiu** (Monereo, 2017). No creiem en solucions tancades que \"s'imposen\" des de fora de l'escola, sinó en la **co-creació de coneixements i recursos** compartits amb el professorat, prenent com a base el seu propi bagatge i experiència pràctica (triangle interactiu: assessor, assessorat, contingut).
+                        </p>
+                    </div>
+                    <div class="md:col-span-4 flex justify-center">
+                        <svg class="w-32 h-32 text-brand-600 opacity-90" viewBox="0 0 100 100" fill="none">
+                            <polygon points="50,15 90,80 10,80" stroke="currentColor" stroke-width="3" stroke-linejoin="round" fill="rgba(14,165,233,0.05)"/>
+                            <circle cx="50" cy="15" r="6" fill="#0ea5e9"/>
+                            <circle cx="90" cy="80" r="6" fill="#14b8a6"/>
+                            <circle cx="10" cy="80" r="6" fill="#6366f1"/>
+                            <text x="50" y="32" font-size="7" font-weight="bold" fill="#0c4a6e" text-anchor="middle">ASSESSOR</text>
+                            <text x="85" y="92" font-size="7" font-weight="bold" fill="#0c4a6e" text-anchor="middle">CONTINGUT</text>
+                            <text x="15" y="92" font-size="7" font-weight="bold" fill="#0c4a6e" text-anchor="middle">DOCENT</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 3: EL PROJECTE (INTERVENCIÓ) -->
+        <section id="sec-projecte" class="tab-content transition-opacity duration-300 py-12 md:py-20 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-50 px-3 py-1 rounded-full editable-text" id="project-sec-tag">Marc d'Intervenció</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 editable-text" id="project-sec-title">Eines Pràctiques i Co-creació Docent</h2>
+                    <p class="text-slate-600 editable-text" id="project-sec-desc">Dissenyat específicament per a l'Escola Mare de Déu de la Muntanya per tal de sistematitzar la transició cap a un model inclusiu basat en el DUA.</p>
+                </div>
+
+                <!-- Detall del Projecte: Pestanyes Internes -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-4 space-y-2 shadow-sm">
+                        <button onclick="switchProjTab('proj-demanda')" class="proj-tab-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-brand-700 bg-brand-50 transition-all flex items-center gap-3" data-proj-tab="proj-demanda">
+                            <i data-lucide="help-circle" class="w-5 h-5"></i>
+                            Demanda i Context
+                        </button>
+                        <button onclick="switchProjTab('proj-marcteoric')" class="proj-tab-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3" data-proj-tab="proj-marcteoric">
+                            <i data-lucide="bookmark" class="w-5 h-5"></i>
+                            Marc Teòric
+                        </button>
+                        <button onclick="switchProjTab('proj-objectius')" class="proj-tab-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3" data-proj-tab="proj-objectius">
+                            <i data-lucide="target" class="w-5 h-5"></i>
+                            Objectius i Impacte
+                        </button>
+                        <button onclick="switchProjTab('proj-fases')" class="proj-tab-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3" data-proj-tab="proj-fases">
+                            <i data-lucide="calendar" class="w-5 h-5"></i>
+                            Cronograma i Fases
+                        </button>
+                    </div>
+
+                    <!-- Contingut Pestanya Interna -->
+                    <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                        <!-- Demanda i Context -->
+                        <div id="proj-demanda" class="proj-content space-y-6">
+                            <h3 class="text-2xl font-bold text-slate-900 editable-text" id="demanda-title">Demanda o necessitat identificada</h3>
+                            <p class="text-slate-600 leading-relaxed text-sm editable-text" id="demanda-desc">
+                                L'escola compta amb **11 alumnes diagnosticats amb TEA**, distribuïts en diverses aules de primària. La demanda neix de la necessitat de dotar el claustre d'eines per respondre a les necessitats d'autoregulació i aprenentatge d'aquests alumnes, des d'un enfocament d'aula inclusiva que eviti que les actuacions quedin reduïdes a respostes individuals \"aïllades\" i poc coordinades.
+                            </p>
+                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                                <h4 class="text-sm font-bold text-amber-800 flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                    Punts clau detectats a l'anàlisi de realitat:
+                                </h4>
+                                <ul class="list-disc pl-5 text-xs text-amber-950 space-y-1">
+                                    <li class="editable-text" id="demanda-bullet-1">Manca de sistematització en la transició de l'alumnat de curs a curs.</li>
+                                    <li class="editable-text" id="demanda-bullet-2">Dificultats d'autoregulació emocional dels alumnes amb TEA en els espais no estructurats (pati, menjador).</li>
+                                    <li class="editable-text" id="demanda-bullet-3">Necessitat de definir criteris comuns en l'ús d'agendes visuals i materials adaptats.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Marc Teòric -->
+                        <div id="proj-marcteoric" class="proj-content space-y-6 hidden">
+                            <h3 class="text-2xl font-bold text-slate-900 editable-text" id="marcteoric-title">Perspectiva Teòrica i d'Intervenció</h3>
+                            <p class="text-slate-600 leading-relaxed text-sm editable-text" id="marcteoric-desc">
+                                El projecte es fonamenta en la convergència de tres grans paradigmes educatius que guien la inclusió actual i garanteixen un rigor científic sòlid:
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-brand-700 editable-text" id="marcteoric-p1-title">DUA</h4>
+                                    <p class="text-2xs text-slate-600 editable-text" id="marcteoric-p1-desc">Disseny Universal per a l'Aprenentatge (CAST, 2018). Dissenyar l'aula pensant en tothom des del principi.</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-brand-700 editable-text" id="marcteoric-p2-title">Teoria de la Ment</h4>
+                                    <p class="text-2xs text-slate-600 editable-text" id="marcteoric-p2-desc">Comprensió de les singularitats de processament cognitiu de l'alumnat amb TEA per facilitar espais estructurats.</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                                    <h4 class="text-xs font-bold text-brand-700 editable-text" id="marcteoric-p3-title">Assessorament Col·laboratiu</h4>
+                                    <p class="text-2xs text-slate-600 editable-text" id="marcteoric-p3-desc">Intervenció no directiva enfocada en la reflexió conjunta docent-psicopedagog (Badia i Mauri, 2006).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Objectius i Impacte -->
+                        <div id="proj-objectius" class="proj-content space-y-6 hidden">
+                            <h3 class="text-2xl font-bold text-slate-900 editable-text" id="objectius-title">Objectius del Projecte d'Intervenció</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed editable-text" id="objectius-desc">
+                                S'han establert objectius que busquen transformar tant la cultura escolar com les pràctiques d'aula del professorat:
+                            </p>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 p-1 bg-brand-100 text-brand-600 rounded-md">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-slate-900 editable-text" id="obj-1-title">Unificar Criteris Pedagògics</h4>
+                                        <p class="text-xs text-slate-600 editable-text" id="obj-1-desc">Dissenyar de manera col·laborativa un protocol de centre estructurat per garantir una resposta coherent en el traspàs d'alumnes amb TEA.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 p-1 bg-brand-100 text-brand-600 rounded-md">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-slate-900 editable-text" id="obj-2-title">Capacitació en la Estructuració Ambiental</h4>
+                                        <p class="text-xs text-slate-600 editable-text" id="obj-2-desc">Proporcionar als docents eienes clau de disseny espacial i ambiental que facilitin l'anticipació i l'autonomia de l'alumnat.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 p-1 bg-brand-100 text-brand-600 rounded-md">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-slate-900 editable-text" id="obj-3-title">Millora dels Espais de Recreació</h4>
+                                        <p class="text-xs text-slate-600 editable-text" id="obj-3-desc">Organitzar de forma inclusiva els espais de pati de l'escola utilitzant senyalització i jocs estructurats guiats per reduir desregulacions.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cronograma i Fases -->
+                        <div id="proj-fases" class="proj-content space-y-6 hidden">
+                            <h3 class="text-2xl font-bold text-slate-900 editable-text" id="cronograma-title">Cronograma del Projecte</h3>
+                            <p class="text-slate-600 text-sm editable-text" id="cronograma-desc">El procés de transformació s'implementa de forma sistemàtica a través de 4 fases claus:</p>
+                            
+                            <div class="relative pl-6 border-l-2 border-brand-200 space-y-6 text-xs text-slate-600">
+                                <div class="relative">
+                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-brand-500 border-4 border-white"></div>
+                                    <span class="font-bold text-brand-700 block text-xs editable-text" id="fase-1-title">Fase 1: Diagnòstic i Anàlisi de Necessitats (Febrer - Març)</span>
+                                    <span class="editable-text" id="fase-1-desc">Observació participativa d'aules, anàlisi de documents del centre, entrevistes estructurades i reunions de coordinació.</span>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-brand-500 border-4 border-white"></div>
+                                    <span class="font-bold text-brand-700 block text-xs editable-text" id="fase-2-title">Fase 2: Formació Docent i Co-creació (Abril - Maig)</span>
+                                    <span class="editable-text" id="fase-2-desc">Tallers pràctics sobre autisme i disseny d'entorns d'aula DUA. Redacció conjunta dels esborranys del protocol institucional.</span>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-brand-500 border-4 border-white"></div>
+                                    <span class="font-bold text-brand-700 block text-xs editable-text" id="fase-3-title">Fase 3: Implementació de Recursos (Maig - Juny)</span>
+                                    <span class="editable-text" id="fase-3-desc">Aplicació pràctica d'agendes visuals, racó de la calma a l'aula i senyalització pictogràfica dels espais comuns de l'escola.</span>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-brand-500 border-4 border-white"></div>
+                                    <span class="font-bold text-brand-700 block text-xs editable-text" id="fase-4-title">Fase 4: Avaluació i Cloenda (Juny)</span>
+                                    <span class="editable-text" id="fase-4-desc">Rúbrica de valoració de l'impacte amb docents, autoavaluació i traspàs institucional de recursos creats.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 4: EINA PRÀCTICA AULA INTERACTIVA DUA-TEA -->
+        <section id="sec-aula" class="tab-content transition-opacity duration-300 py-12 md:py-20 bg-slate-100 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4 mb-12">
+                    <span class="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-3 py-1 rounded-full uppercase tracking-wider">Eina Interactiva per a l'Aula</span>
+                    <h2 class="text-3xl font-extrabold text-slate-900">Planificador d'Entorns d'Aula Inclusiva DUA-TEA</h2>
+                    <p class="text-slate-600">Clica en cadascun dels espais crítics del disseny de l'aula per visualitzar les pautes metodològiques del DUA i l'adaptació ambiental de l'entorn escolar per a l'alumnat amb autisme.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+                    <!-- Mapa de l'Aula -->
+                    <div class="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-6">
+                        <div class="flex justify-between items-center pb-4 border-b border-slate-150">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i data-lucide="layout-grid" class="text-brand-600 w-5 h-5"></i>
+                                Disseny de Planta d'una Aula Inclusiva
+                            </h3>
+                            <span class="text-2xs font-semibold text-slate-400">CLICA UN COMPONENT</span>
+                        </div>
+                        
+                        <!-- Plànol interactiu en CSS Grid / SVG -->
+                        <div class="relative bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 min-h-[350px] flex flex-col justify-between">
+                            <!-- Fila Superior: Pissarra i Racó de la Calma -->
+                            <div class="flex justify-between items-start gap-4">
+                                <!-- Pissarra Visual / Agenda (Àrea 1) -->
+                                <button onclick="selectAulaZone('pissarra')" id="btn-zone-pissarra" class="aula-zone bg-brand-50 border-2 border-brand-500 hover:bg-brand-100/80 p-4 rounded-xl text-left shadow-sm hover:shadow-md transition-all w-5/12 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="bg-brand-500 text-white text-3xs px-1.5 py-0.5 rounded font-bold">ZONA 1</span>
+                                        <i data-lucide="calendar" class="w-4 h-4 text-brand-500"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-slate-900">Pissarra i Agenda</h4>
+                                    <p class="text-4xs text-slate-500 leading-tight">Agendes visuals de rotació diària per anticipar activitats.</p>
+                                </button>
+
+                                <!-- Racó de la Calma (Àrea 2) -->
+                                <button onclick="selectAulaZone('calma')" id="btn-zone-calma" class="aula-zone bg-teal-50 border-2 border-teal-500 hover:bg-teal-100/80 p-4 rounded-xl text-left shadow-sm hover:shadow-md transition-all w-5/12 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="bg-teal-500 text-white text-3xs px-1.5 py-0.5 rounded font-bold">ZONA 2</span>
+                                        <i data-lucide="heart" class="w-4 h-4 text-teal-500"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-slate-900">Racó de la Calma</h4>
+                                    <p class="text-4xs text-slate-500 leading-tight">Espai de baixa estimulació per a la autoregulació sensorial.</p>
+                                </button>
+                            </div>
+
+                            <!-- Fila Central: Taules de treball inclusives (Àrea 3) -->
+                            <div class="flex justify-center my-6">
+                                <button onclick="selectAulaZone('taules')" id="btn-zone-taules" class="aula-zone bg-indigo-50 border-2 border-indigo-500 hover:bg-indigo-100/80 p-5 rounded-xl text-center shadow-sm hover:shadow-md transition-all w-8/12 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="bg-indigo-500 text-white text-3xs px-1.5 py-0.5 rounded font-bold">ZONA 3</span>
+                                        <i data-lucide="users" class="w-4 h-4 text-indigo-500"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-slate-900">Treball Cooperatiu i Individual</h4>
+                                    <p class="text-4xs text-slate-500 leading-tight">Taules agrupades amb opció d'aïlladors visuals per reduir la distracció.</p>
+                                </button>
+                            </div>
+
+                            <!-- Fila Inferior: Àrea de Transició i Material Estructurat -->
+                            <div class="flex justify-between items-end gap-4">
+                                <!-- Espai de Transició (Àrea 4) -->
+                                <button onclick="selectAulaZone('transicio')" id="btn-zone-transicio" class="aula-zone bg-yellow-50 border-2 border-yellow-500 hover:bg-yellow-100/80 p-4 rounded-xl text-left shadow-sm hover:shadow-md transition-all w-5/12 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="bg-yellow-500 text-white text-3xs px-1.5 py-0.5 rounded font-bold">ZONA 4</span>
+                                        <i data-lucide="log-in" class="w-4 h-4 text-yellow-600"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-slate-900">Zona de Transició</h4>
+                                    <p class="text-4xs text-slate-500 leading-tight">Punt de canvi d'activitat i control de la motxilla/objectes personals.</p>
+                                </button>
+
+                                <!-- Organitzadors de Material (Àrea 5) -->
+                                <button onclick="selectAulaZone('materials')" id="btn-zone-materials" class="aula-zone bg-purple-50 border-2 border-purple-500 hover:bg-purple-100/80 p-4 rounded-xl text-left shadow-sm hover:shadow-md transition-all w-5/12 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="bg-purple-500 text-white text-3xs px-1.5 py-0.5 rounded font-bold">ZONA 5</span>
+                                        <i data-lucide="archive" class="w-4 h-4 text-purple-500"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-slate-900">Materials Estructurats</h4>
+                                    <p class="text-4xs text-slate-500 leading-tight">Prestatgeries identificades amb codis de colors i pictogrames.</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pautes de la Zona Seleccionada -->
+                    <div class="lg:col-span-5 bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div id="aula-zone-detail" class="space-y-6">
+                            <!-- Contingut dinàmic injectat per JS -->
+                            <div class="text-center py-12 space-y-4">
+                                <i data-lucide="mouse-pointer-click" class="w-12 h-12 text-slate-300 mx-auto animate-bounce"></i>
+                                <h3 class="text-lg font-bold text-slate-700">Explora les directrius DUA-TEA</h3>
+                                <p class="text-xs text-slate-500">Clica qualsevol àrea de l'aula inclusiva del plànol de l'esquerra per verure en detall les estratègies psicopedagògiques, materials proposats i el marc d'actuació del DUA corresponent.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-6 border-t border-slate-100 bg-slate-50 p-4 rounded-xl text-xs text-slate-500 flex items-center gap-3">
+                            <i data-lucide="info" class="w-5 h-5 text-brand-600 flex-shrink-0"></i>
+                            <span>Aquest disseny ambiental ha estat validat pel claustre de primària de l'Escola Mare de Déu de la Muntanya per al curs 2025-2026.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 5: RÚBRICA D'AVALUACIÓ INTERACTIVA (DUA) -->
+        <section id="sec-rubrica" class="tab-content transition-opacity duration-300 py-12 md:py-20 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">Avaluació d'Aules</span>
+                    <h2 class="text-3xl font-extrabold text-slate-900">Rúbrica Interactiva d'Aula Inclusiva DUA</h2>
+                    <p class="text-slate-600">Comptes amb un entorn realment preparat pel DUA i l'atenció del TEA? Respon a la nostra rúbrica d'autoavaluació per rebre suggeriments pràctics i professionals de millora de l'espai i el disseny d'aprenentatge.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    <!-- Formulari de la Rúbrica -->
+                    <div class="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+                        <form id="rubrica-form" class="space-y-8" onsubmit="event.preventDefault(); calculateRubric();">
+                            
+                            <!-- Categoria 1: COMPROMÍS (Motivació i implicació) -->
+                            <div class="space-y-4 pb-6 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-pink-100 text-pink-700 font-bold px-2.5 py-1 text-xs rounded-lg">1</span>
+                                    <h3 class="text-base font-bold text-slate-900">Múltiples formes de COMPROMÍS (Xarxa Afectiva)</h3>
+                                </div>
+                                <p class="text-xs text-slate-500">L'aula afavoreix l'autoregulació de l'alumnat i gestiona correctament les emocions?</p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-700 block mb-2">Com de consolidat està l'ús d'agendes visuals o cronogrames d'anticipació a la teva aula?</label>
+                                        <select id="rub-q1" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-indigo-500 outline-none">
+                                            <option value="1">Gairebé mai s'utilitzen / No estan exposats visualment</option>
+                                            <option value="3">S'utilitzen només en moments concrets o només per l'alumne amb TEA</option>
+                                            <option value="5">Consolidat per a toda la classe: es revisa cada matí visualment (Pilar DUA)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Categoria 2: REPRESENTACIÓ -->
+                            <div class="space-y-4 pb-6 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-brand-100 text-brand-700 font-bold px-2.5 py-1 text-xs rounded-lg">2</span>
+                                    <h3 class="text-base font-bold text-slate-900">Múltiples formes de REPRESENTACIÓ (Xarxa de Reconeixement)</h3>
+                                </div>
+                                <p class="text-xs text-slate-500">S'ofereixen continguts educatius utilitzant diferents alternatives sensorials?</p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-700 block mb-2">Els continguts estan acompanyats de suports pictogràfics o objectes reals per guiar la comprensió?</label>
+                                        <select id="rub-q2" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-indigo-500 outline-none">
+                                            <option value="1">La representació és majoritàriament textual o oral sense suports visuals</option>
+                                            <option value="3">S'utilitzen imatges puntualment, però sense una sistematització de pictogrames</option>
+                                            <option value="5">Els conceptes es complementen sempre amb elements visuals, rètols clarament estructurats i objectes reals</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Categoria 3: ACCIÓ I EXPRESSIÓ -->
+                            <div class="space-y-4 pb-6">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-teal-100 text-teal-700 font-bold px-2.5 py-1 text-xs rounded-lg">3</span>
+                                    <h3 class="text-base font-bold text-slate-900">Múltiples formes d'ACCIÓ I EXPRESSIÓ (Xarxa Estratègica)</h3>
+                                </div>
+                                <p class="text-xs text-slate-500">Permets diferents canals de comunicació i desenvolupament d'activitats de l'alumnat?</p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-slate-700 block mb-2">Hi ha diversitat d'alternatives per avaluar i expressar els aprenentatges (tecnologia, manipulatius, oral)?</label>
+                                        <select id="rub-q3" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-indigo-500 outline-none">
+                                            <option value="1">L'avaluació es fonamenta en la pràctica d'una única prova escrita o oral estàndard</option>
+                                            <option value="3">Permeto alguna alternativa, però l'alumnat utilitza normalment el format tradicional escrit</option>
+                                            <option value="5">L'alumnat pot triar entre formats digitals, dibuixos, gravacions, portfolis o activitats manipulatives</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-4 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/10">
+                                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                                Obtenir Diagnòstic i Consells Personalitzats
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Resultats de la Rúbrica -->
+                    <div class="lg:col-span-4 bg-slate-900 rounded-3xl p-8 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.1),transparent)] pointer-events-none"></div>
+                        
+                        <div class="relative z-10 space-y-6" id="rubric-result-box">
+                            <h3 class="text-xl font-bold">El teu Diagnòstic</h3>
+                            <div class="py-12 text-center space-y-4 border border-slate-800 rounded-2xl bg-slate-950/40">
+                                <i data-lucide="clipboard-check" class="w-12 h-12 text-slate-500 mx-auto"></i>
+                                <span class="text-xs text-slate-400 block px-4">Omple el formulari i fes clic a "Obtenir Diagnòstic" per veure la teva puntuació DUA d'aula.</span>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 pt-6 mt-6 border-t border-slate-800 text-2xs text-slate-400">
+                            *Aquesta rúbrica interactiva segueix estrictament el document original de valoració col·laborativa psicopedagògica dissenyat per a l'escola Mare de Déu de la Muntanya.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 6: EL ROL PROFESSIONAL DEL PSICOPEDAGOG (TASCA 7) -->
+        <section id="sec-rol" class="tab-content transition-opacity duration-300 py-12 md:py-20 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+                    <span class="text-xs font-bold text-violet-600 bg-violet-50 px-3 py-1 rounded-full uppercase tracking-wider">Tasca 7: Professionalitat</span>
+                    <h2 class="text-3xl font-extrabold text-slate-900">El Perfil Profesional del Psicopedagog</h2>
+                    <p class="text-slate-600">Anàlisi de les nostres habilitats, competències, coneixements i valors com a especialistes en intervenció escolar col·laborativa per a la transformació de centres.</p>
+                </div>
+
+                <!-- Quadre interactiu de competències -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Habilitats -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-violet-300 transition-all space-y-4">
+                        <div class="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit">
+                            <i data-lucide="message-square" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">Habilitats Clau</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed editable-text" id="rol-skills-desc">
+                            L'<strong>escolta activa</strong>, l'<strong>empatia</strong> i la **comunicació assertiva** són la base de la nostra pràctica (Feixas i Miró, 2014). Són indispensables per crear espais de seguretat amb els mestres, on puguin expressar els seus neguits o inseguterats sense por a ser jutjats.
+                        </p>
+                    </div>
+
+                    <!-- Competències -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-violet-300 transition-all space-y-4">
+                        <div class="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit">
+                            <i data-lucide="award" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">Competències</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed editable-text" id="rol-competencies-desc">
+                            Capacitat per liderar processos de **reflexió compartida** i facilitar la **coordinació interna** dels centres educatius (Monereo i Castelló, 2004). Sabem dinamitzar el triangle interactiu per garantir que els plans d'intervenció esdevinguin realment institucionals.
+                        </p>
+                    </div>
+
+                    <!-- Coneixements -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-violet-300 transition-all space-y-4">
+                        <div class="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit">
+                            <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">Coneixements</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed editable-text" id="rol-knowledge-desc">
+                            Domini profund del **Disseny Universal per a l'Aprenentatge (DUA)**, models d'escola inclusiva i metodologies constructivistes d'assessorament, combinat amb la recerca sobre els estils de pensament, autoregulació emocional i de comunicació en el TEA.
+                        </p>
+                    </div>
+
+                    <!-- Valors -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-violet-300 transition-all space-y-4">
+                        <div class="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">Valors Professionals</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed editable-text" id="rol-values-desc">
+                            Defensem un compromís decidit amb l'**ètica professional**, el **respecte envers la singularitat dels contextos** escolars (Badia i Mauri, 2006) i la **transformació inclusiva de la societat**, cercant l'equitat i donant veu a tot l'alumnat.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Autoavaluació / Metacognició -->
+                <div class="mt-16 bg-slate-900 rounded-3xl p-8 text-white border border-slate-800 shadow-xl">
+                    <div class="max-w-3xl space-y-6">
+                        <h3 class="text-2xl font-bold flex items-center gap-3">
+                            <i data-lucide="heart-handshake" class="text-brand-500 w-6 h-6"></i>
+                            El nostre Compromís Social com a Assessores
+                        </h3>
+                        <p class="text-sm text-slate-300 leading-relaxed editable-text" id="rol-commitment-desc">
+                            Aquest projecte a l'<strong>Escola Mare de Déu de la Muntanya</strong> ha estat un espai d'aprenentatge mutu. Com a assessores en formació, confirmem que la transformació escolar és un camí gradual de formació continuada, on el paper de la psicopedagogia no és donar \"receptes miraculoses\", sinó construir ponts, acompanyar els equips de professors en la reflexió conjunta i aportar un criteri rigorós que generi autonomia pedagògica als centres escolars.
+                        </p>
+                        <div class="pt-4 border-t border-slate-800 text-xs text-slate-400">
+                            Equip Xarxa Aprenentatge: Laura, Ainara, Aura i Sonia • <em>Màster Universitari de Psicopedagogia (UOC)</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 7: RECURSOS I CONTACTE -->
+        <section id="sec-contacte" class="tab-content transition-opacity duration-300 py-12 md:py-20 bg-slate-50 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    
+                    <!-- Descarregables i Recursos -->
+                    <div class="space-y-8">
+                        <div class="space-y-4">
+                            <span class="text-xs font-bold text-brand-600 uppercase tracking-widest bg-brand-50 px-3 py-1 rounded-full">Guies Pràctiques</span>
+                            <h2 class="text-3xl font-extrabold text-slate-900">Materials de Descàrrega</h2>
+                            <p class="text-slate-600 text-sm">Hem dissenyat documents de treball reals per a la comunitat educativa de l'escola Mare de Déu de la Muntanya que pots utilitzar i descarregar de manera completament lliure.</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- recurs 1 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 bg-brand-50 text-brand-600 rounded-xl">
+                                        <i data-lucide="file-text" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-900">Protocol Institucional de Transició TEA</h4>
+                                        <p class="text-3xs text-slate-500">Document PDF complet per gestionar el traspàs escolar entre primària i secundària.</p>
+                                    </div>
+                                </div>
+                                <button onclick="simulateDownload('Protocol de Transició TEA')" class="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-brand-600 hover:text-white transition-all shadow-inner">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <!-- recurs 2 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 bg-teal-50 text-teal-600 rounded-xl">
+                                        <i data-lucide="image" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-900">Pla de Senyalització del Pati Escolar</h4>
+                                        <p class="text-3xs text-slate-500">Conjunt de fitxes amb pictogrames d'ARASAAC per marcar zones i regles de joc estructurat.</p>
+                                    </div>
+                                </div>
+                                <button onclick="simulateDownload('Pictogrames de Pati Escolar')" class="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-brand-600 hover:text-white transition-all shadow-inner">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <!-- recurs 3 -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                        <i data-lucide="sliders" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-900">Plantilla d'Observació de Context DUA</h4>
+                                        <p class="text-3xs text-slate-500">Graella d'observació psicopedagògica per a docents i especialistes d'aula.</p>
+                                    </div>
+                                </div>
+                                <button onclick="simulateDownload('Plantilla Observació DUA')" class="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-brand-600 hover:text-white transition-all shadow-inner">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulari de Contacte -->
+                    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+                        <div class="space-y-2 mb-6">
+                            <h3 class="text-xl font-bold text-slate-900">Demana assessorament personalitzat</h3>
+                            <p class="text-xs text-slate-500">Si t'interessa rebre més informació sobre la nostra metodologia de cocreació o vols assessorament per a la teva escola, contacta amb el nostre equip d'especialistes.</p>
+                        </div>
+
+                        <form id="contacte-form" class="space-y-4" onsubmit="event.preventDefault(); submitContactForm();">
+                            <div>
+                                <label class="text-3xs font-bold text-slate-500 uppercase tracking-wider block mb-1">El teu Nom i Cognoms</label>
+                                <input type="text" id="cnt-nom" required placeholder="Ex. Marta Martínez" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 outline-none">
+                            </div>
+                            
+                            <div>
+                                <label class="text-3xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Correu Electrònic</label>
+                                <input type="email" id="cnt-mail" required placeholder="Ex. marta@escola.cat" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="text-3xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Centre Educatiu / Organització</label>
+                                <input type="text" id="cnt-centre" placeholder="Ex. Escola Mare de Déu de la Muntanya" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="text-3xs font-bold text-slate-500 uppercase tracking-wider block mb-1">El teu Missatge</label>
+                                <textarea id="cnt-missatge" rows="4" required placeholder="Com et podem ajudar en el procés d'inclusió escolar?" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 outline-none"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full py-4 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-md flex items-center justify-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Enviar missatge de consulta
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER / PEU DE PÀGINA -->
+    <footer class="bg-slate-900 text-white pt-16 pb-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-slate-800">
+                
+                <!-- Presentació breu -->
+                <div class="space-y-4 md:col-span-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="bg-brand-600 text-white p-2 rounded-xl">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">Xarxa Aprenentatge</span>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed max-w-sm">
+                        Plataforma de difusió del Projecte d'Intervenció psicopedagògica per a la millora de la pràctica educativa (UOC).
+                    </p>
+                    <div class="text-2xs text-slate-500">
+                        © Curs 2025-2026 • Màster en Psicopedagogia (UOC)
+                    </div>
+                </div>
+
+                <!-- Enllaços ràpids -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-brand-400 uppercase tracking-widest">Navegació</h4>
+                    <ul class="text-xs text-slate-400 space-y-2">
+                        <li><button onclick="navigateTo('inici')" class="hover:text-brand-300">Inici</button></li>
+                        <li><button onclick="navigateTo('quisom')" class="hover:text-brand-300">Qui som</button></li>
+                        <li><button onclick="navigateTo('projecte')" class="hover:text-brand-300">El Projecte</button></li>
+                        <li><button onclick="navigateTo('aula')" class="hover:text-brand-300">Aula DUA-TEA</button></li>
+                        <li><button onclick="navigateTo('rubrica')" class="hover:text-brand-300">Rúbrica DUA</button></li>
+                    </ul>
+                </div>
+
+                <!-- Autores i Institució -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-teal-400 uppercase tracking-widest">Autoria i Context</h4>
+                    <div class="text-xs text-slate-400 space-y-2">
+                        <p class="font-semibold text-white">Equip 7:</p>
+                        <p class="text-2xs leading-relaxed">Laura Carrera, Ainara Porrino, Aura Sauch, Sonia Vernet</p>
+                        <p class="font-semibold text-white pt-2">Institució:</p>
+                        <p class="text-2xs">Escola Mare de Déu de la Muntanya</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Segells i crèdits oficials -->
+            <div class="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-2xs text-slate-500">
+                <div class="flex items-center gap-3">
+                    <div class="bg-slate-800 text-slate-300 px-2 py-1 rounded font-bold">M1.855</div>
+                    <span>Dossier de Tasques - Repte 5 de Psicopedagogia</span>
+                </div>
+                <div class="text-slate-500 text-center md:text-right">
+                    Desenvolupat amb els criteris d'accessibilitat i qualitat de l'Annex 5.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BANNER DE NOTIFICACIÓ DINÀMIC (REMPLAÇA ALERTS) -->
+    <div id="toast-notification" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white border border-slate-800 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="p-1.5 bg-brand-600 rounded-lg text-white" id="toast-icon-box">
+            <i data-lucide="check-circle" class="w-5 h-5" id="toast-icon"></i>
+        </div>
+        <div>
+            <h4 class="text-xs font-bold" id="toast-title">Notificació</h4>
+            <p class="text-3xs text-slate-400" id="toast-body">Acció realitzada correctament.</p>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT DE L'APLICACIÓ -->
+    <script>
+        // Inicialització de Lucide Icons
+        lucide.createIcons();
+
+        // VARIABLES DE CONTROL DE L'EDICIÓ
+        let isEditModeActive = false;
+
+        function toggleEditMode() {
+            isEditModeActive = !isEditModeActive;
+            const editBar = document.getElementById('edit-bar');
+            const mainHeader = document.getElementById('main-header');
+            const toggleBtn = document.getElementById('toggle-edit-btn');
+            const btnText = document.getElementById('edit-btn-text');
+            const btnIcon = document.getElementById('edit-btn-icon');
+            
+            const editableElements = document.querySelectorAll('.editable-text');
+
+            if (isEditModeActive) {
+                // Activar Mode Edició
+                editBar.classList.remove('hidden');
+                mainHeader.classList.add('top-[52px]'); // Baixar el header per deixar espai a la barra d'edició
+                toggleBtn.classList.add('bg-brand-600');
+                btnText.innerText = "Desactivar Edició";
+                
+                // Fer tots els elements editables
+                editableElements.forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                    el.classList.add('editable-active');
+                });
+
+                showToast("Mode Edició Activat", "Ara pots fer clic sobre qualsevol text i reescriure'l.", "edit-3");
+            } else {
+                // Desactivar Mode Edició
+                editBar.classList.add('hidden');
+                mainHeader.classList.remove('top-[52px]');
+                toggleBtn.classList.remove('bg-brand-600');
+                btnText.innerText = "Activar Edició en Viu";
+
+                // Desactivar edició dels elements
+                editableElements.forEach(el => {
+                    el.setAttribute('contenteditable', 'false');
+                    el.classList.remove('editable-active');
+                });
+
+                showToast("Mode Edició Desactivat", "S'han tancat els camps d'escriptura.", "check");
+            }
+        }
+
+        // DESAR EN MEMÒRIA (LOCAL STATE)
+        function saveEdits() {
+            // Simulació de guardat de l'estat actual en el DOM
+            showToast("Canvis Desats!", "Els textos s'han actualitzat en aquesta sessió.", "save");
+        }
+
+        // EXPORTAR EL NOU CODIG HTML EDITAT PEL COMPRADOR
+        function exportEditedHTML() {
+            // Abans de desar, ens assegurem de treure l'estat d'edició per no exportar les línies de selecció i la barra flotant activa
+            const wasEditing = isEditModeActive;
+            if (isEditModeActive) {
+                toggleEditMode();
+            }
+
+            // Capturar tot el codi de la pàgina
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+            
+            // Crear enllaç de descàrrega
+            const tempLink = document.createElement("a");
+            tempLink.href = URL.createObjectURL(blob);
+            tempLink.download = "Xarxa_Aprenentatge_Editat.html";
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+            // Si estava editant, tornem a obrir el mode
+            if (wasEditing) {
+                setTimeout(() => { toggleEditMode(); }, 500);
+            }
+
+            showToast("Web Descarregada!", "S'ha generat un fitxer HTML amb els teus canvis directes.", "download");
+        }
+
+        // CONTROL DE NAVEGACIÓ ENTRE SECCIONS
+        function navigateTo(tabId) {
+            document.querySelectorAll('.tab-content').forEach(section => {
+                section.classList.add('hidden');
+            });
+            const targetSection = document.getElementById(`sec-${tabId}`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('bg-brand-50', 'text-brand-700');
+                    btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+                } else {
+                    btn.classList.remove('bg-brand-50', 'text-brand-700');
+                    btn.classList.add('text-slate-600');
+                }
+            });
+
+            document.getElementById('mobile-menu').classList.add('hidden');
+        }
+
+        // MENÚ MÒBIL INTERACTIU
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // CONTROL DE L'APARTAT DE PROJECTES (PESTANYES INTERNES)
+        function switchProjTab(subTabId) {
+            document.querySelectorAll('.proj-content').forEach(div => {
+                div.classList.add('hidden');
+            });
+            document.querySelectorAll('.proj-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-50', 'text-brand-700');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-50');
+            });
+
+            document.getElementById(subTabId).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-proj-tab="${subTabId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+                activeBtn.classList.add('bg-brand-50', 'text-brand-700');
+            }
+        }
+
+        // CONTROL DEL PLÀNOL DE L'AULA INTERACTIVA DUA-TEA
+        const zonesData = {
+            pissarra: {
+                title: "Àrea 1: Pissarra Visual i Agenda del Dia",
+                desc: "A la paret frontal superior s'ubica la pissarra blanca combinada amb un panell d'anticipació d'activitats diàries mitjançant targetes pictogràfiques organitzades de dalt a baix o d'esquerra a dreta.",
+                dua: "Proporcionar múltiples opcions per a la representació de la informació escolar (Pilar 1 DUA). Fomenta l'anticipació cognitiva reduint significativament la incertesa i els nivells d'ansietat en els alumnes amb autisme.",
+                pautes: [
+                    "Dissenyar l'agenda visual utilitzant imatges o pictogrames clars i ordenats.",
+                    "Integrar activament l'agenda visual en les rutines diàries: revisar-la de manera col·laborativa a l'inici de cada classe i marcar les tasques ja finalitzades.",
+                    "Indicar amb colors consistents les transicions o canvis sobtats de l'horari habitual."
+                ],
+                icon: "calendar",
+                colorClass: "brand"
+            },
+            calma: {
+                title: "Àrea 2: El Racó de la Calma",
+                desc: "Un microespai d'aula de baixa estimulació dissenyat especialment per a l'autoregulació emocional de l'alumnat quan experimenta una sobrecàrrega sensorial o un estat de frustració.",
+                dua: "Ofereix alternatives reguladores per mantenir la motivació i el compromís personalitzant l'esforç i la persistència (Pilar 3 DUA).",
+                pautes: [
+                    "Delimitar l'espai físicament de manera suau (catifa petita, coixins confortables, tenda tipus tipi de color neutre).",
+                    "Disposar d'una caixa d'autoregulació amb elements adaptats (auriculars contra el soroll, pilotes antiestrès, joguines sensorials, un rellotge de sorra).",
+                    "Establir pautes de regulació que no siguin punitives, assegurant que l'alumnat percep el racó com un espai de seguretat."
+                ],
+                icon: "heart",
+                colorClass: "teal"
+            },
+            taules: {
+                title: "Àrea 3: Estructures de Treball Inclusiu",
+                desc: "Estructuració flexible de les taules que permet combinar el treball cooperatiu amb opcions d'espais de treball totalment lliures de distractors per a moments d'activitat individual guiada.",
+                dua: "Minimitza la distracció sensorial i optimitza l'acció i expressió (Pilar 2 DUA), facilitant la concentració en les tasques de complexitat elevada.",
+                pautes: [
+                    "Garantir opcions de distanciament i incorporar aïlladors visuals lleugers de sobretaula si l'alumne amb TEA ho demana.",
+                    "Disposar de cadires amb adaptadors físics si cal (com gomes elàstiques de tensió per a la descàrrega motriu a les potes).",
+                    "Utilitzar codis cromàtics en els materials de l'escriptori que coincideixin amb el color assignat a cada matèria."
+                ],
+                icon: "users",
+                colorClass: "indigo"
+            },
+            transicio: {
+                title: "Àrea 4: Zona de Transició i Control Personal",
+                desc: "L'entrada i zona posterior de l'aula s'organitzen com un punt predictible i ordenat on l'alumne fa el traspàs d'un entorn escolar a un altre (del pati a l'aula o canvi de classe).",
+                dua: "Garanteix la claredat organitzativa, donant suport a les funcions executives del disseny d'aprenentatge del DUA.",
+                pautes: [
+                    "Organitzar l'espai de penjadors amb etiquetes de nom grans acompanyades de la foto de l'alumnat.",
+                    "Establir un panell o cistella on dipositar els objectes transicionals d'autoajuda.",
+                    "Disposar d'una seqüència de tres passos (pictograma: 'Entro', 'Penjo la motxilla', 'Assec al meu lloc')."
+                ],
+                icon: "log-in",
+                colorClass: "yellow"
+            },
+            materials: {
+                title: "Àrea 5: Prestatgeries de Materials Estructurats",
+                desc: "Els prestatges de treball es dissenyen per garantir que els llibres, quaderns o recursos manipulatius estiguin clarament classificats, ordenats i visualment identificables sense necessitat de preguntes contínues.",
+                dua: "Suporta la comprensió i la manipulació lliure de materials d'aprenentatge promovent l'autonomia i reduint la dependència del docent de suport.",
+                pautes: [
+                    "Rolar cada prestatge amb pictogrames que representin de forma concreta el seu contingut (ex. tisores, plastilina, folis de colors).",
+                    "Dissenyar caixes individuals autoexplicatives que continguin tot el material necessari per a una sola tasca (enfocament 'Teacch').",
+                    "Mantenir consistència absoluta en l'ordre i evitar canvis imprevistos en l'organització d'aquest mobiliari d'aula."
+                ],
+                icon: "archive",
+                colorClass: "purple"
+            }
+        };
+
+        function selectAulaZone(zoneKey) {
+            document.querySelectorAll('.aula-zone').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-brand-500/50');
+            });
+
+            const activeZoneBtn = document.getElementById(`btn-zone-${zoneKey}`);
+            if (activeZoneBtn) {
+                activeZoneBtn.classList.add('ring-4', 'ring-brand-500/50');
+            }
+
+            const data = zonesData[zoneKey];
+            const detailBox = document.getElementById('aula-zone-detail');
+            
+            let pautesHTML = '';
+            data.pautes.forEach(pauta => {
+                pautesHTML += `
+                    <li class="flex items-start gap-2.5 text-xs text-slate-600 leading-relaxed">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-600 flex-shrink-0"></span>
+                        <span>${pauta}</span>
+                    </li>
+                `;
+            });
+
+            detailBox.innerHTML = `
+                <div class="space-y-4 animate-fade-in">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-${data.colorClass}-50 text-${data.colorClass}-600 rounded-xl">
+                            <i data-lucide="${data.icon}" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">${data.title}</h3>
+                    </div>
+                    
+                    <p class="text-xs text-slate-600 leading-relaxed">${data.desc}</p>
+                    
+                    <div class="bg-slate-50 border border-slate-100 p-4 rounded-xl space-y-1.5">
+                        <span class="text-3xs font-bold text-brand-600 uppercase tracking-widest block">Vinculació DUA</span>
+                        <p class="text-3xs text-slate-500 leading-normal">${data.dua}</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <span class="text-3xs font-extrabold text-slate-500 uppercase tracking-widest block">Directrius Pràctiques per al claustre:</span>
+                        <ul class="space-y-2 pl-1">
+                            ${pautesHTML}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // CÀLCUL I RECOMENDACIÓ DE LA RÚBRICA D'AVALUACIÓ DUA
+        function calculateRubric() {
+            const q1 = parseInt(document.getElementById('rub-q1').value);
+            const q2 = parseInt(document.getElementById('rub-q2').value);
+            const q3 = parseInt(document.getElementById('rub-q3').value);
+            
+            const totalScore = q1 + q2 + q3;
+            const maxScore = 15;
+            const scorePercentage = Math.round((totalScore / maxScore) * 100);
+            
+            let status = "";
+            let color = "";
+            let recommendations = [];
+
+            if (totalScore <= 6) {
+                status = "Inici de Disseny DUA";
+                color = "text-red-500";
+                recommendations = [
+                    "L'aula es recolza encara en un enfocament d'adaptació reactiva, és urgent programar suports des d'un principi.",
+                    "Sistematitza l'agenda visual a la teva pissarra frontal diàriament.",
+                    "Substitueix explicacions orals pures per suports visuals bàsics i targetes manipulatives."
+                ];
+            } else if (totalScore <= 11) {
+                status = "Apropant-se a l'Aula Inclusiva";
+                color = "text-yellow-400";
+                recommendations = [
+                    "Disposes d'eines interessants, però cal estendre-les perquè serveixin de manera permanent a tot el grup d'alumnes.",
+                    "Crea un 'Racó de la Calma' permanent, evitant canvis de lloc d'aquest espai.",
+                    "Intenta oferir almenys dues vies diferents d'avaluació en cada projecte d'aula."
+                ];
+            } else {
+                status = "Aula DUA Consolidada";
+                color = "text-teal-400";
+                recommendations = [
+                    "Excel·lent feina! Els criteris de disseny de la teva aula estan alineats amb el projecte institucional inclusiu.",
+                    "Pots compartir les teves bones pràctiques d'estructura d'aula amb la resta de companys del claustre.",
+                    "Treballa en la millora d'espais no estructurats col·laborant amb l'equip del pati escolar."
+                ];
+            }
+
+            let recommendationsHTML = '';
+            recommendations.forEach(rec => {
+                recommendationsHTML += `
+                    <li class="flex items-start gap-2 text-slate-300">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0"></span>
+                        <span>${rec}</span>
+                    </li>
+                `;
+            });
+
+            const resultBox = document.getElementById('rubric-result-box');
+            resultBox.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <h3 class="text-xl font-bold">Diagnòstic d'Aula</h3>
+                    
+                    <div class="text-center py-6 border border-slate-800 rounded-2xl bg-slate-950/60 space-y-2">
+                        <span class="text-3xl font-extrabold ${color}">${scorePercentage}%</span>
+                        <p class="text-xs font-semibold text-white uppercase tracking-wider">${status}</p>
+                        <p class="text-3xs text-slate-400">Puntuació total obtinguda: ${totalScore} de ${maxScore} punts</p>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <span class="text-2xs font-extrabold text-brand-400 uppercase tracking-widest block">Recomanacions Psicopedagògiques:</span>
+                        <ul class="space-y-2 pl-1 leading-relaxed">
+                            ${recommendationsHTML}
+                        </ul>
+                    </div>
+
+                    <button onclick="resetRubric()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-all">
+                        Tornar a avaluar
+                    </button>
+                </div>
+            `;
+            showToast("Diagnòstic completat", "Rúbrica d'aula autoavaluada amb èxit.", "check-circle");
+        }
+
+        function resetRubric() {
+            document.getElementById('rubrica-form').reset();
+            const resultBox = document.getElementById('rubric-result-box');
+            resultBox.innerHTML = `
+                <h3 class="text-xl font-bold">El teu Diagnòstic</h3>
+                <div class="py-12 text-center space-y-4 border border-slate-800 rounded-2xl bg-slate-950/40">
+                    <i data-lucide="clipboard-check" class="w-12 h-12 text-slate-500 mx-auto"></i>
+                    <span class="text-xs text-slate-400 block px-4">Omple el formulari i fes clic a "Obtenir Diagnòstic" per veure la teva puntuació DUA d'aula.</span>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function simulateDownload(resourceName) {
+            showToast("Iniciant descàrrega", `Descarregant el fitxer: ${resourceName}`, "download");
+        }
+
+        function submitContactForm() {
+            const nom = document.getElementById('cnt-nom').value;
+            const mail = document.getElementById('cnt-mail').value;
+            
+            showToast("Missatge Enviat", `Gràcies ${nom}. Hem rebut la consulta i respondrem a ${mail} aviat.`, "send");
+            document.getElementById('contacte-form').reset();
+        }
+
+        // SISTEMA DE TOAST NOTIFICATION
+        function showToast(title, body, iconName) {
+            const toast = document.getElementById('toast-notification');
+            const tTitle = document.getElementById('toast-title');
+            const tBody = document.getElementById('toast-body');
+            const tIconBox = document.getElementById('toast-icon-box');
+
+            tTitle.innerText = title;
+            tBody.innerText = body;
+
+            // canviar icona de la notificació
+            tIconBox.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5"></i>`;
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
